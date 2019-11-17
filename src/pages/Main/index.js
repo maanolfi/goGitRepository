@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import api from '../../services/api'
 
 import { FaGitAlt, FaPlus, FaSpinner } from 'react-icons/fa'
-import { Form, SubmitButton, List } from './styles';
+import { Form, SubmitButton, List, Errors } from './styles';
 import Container from '../../components/Container'
 
 
@@ -14,17 +14,25 @@ export default function Main() {
   const [name, setName] = useState('')
   const [repos, setRepos] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
 
   const handleSubmit = async e => {
     e.preventDefault()
     setLoading(true)
 
     try {
+
       const { data } = await api.get(`/repos/${name}`)
+
       const repositories = {
         name: data.full_name
       }
 
+      const duplicate = repos.find(r => r.name === data.full_name)
+      if(duplicate) {
+        throw new Error('Repositório duplicado');
+
+      }
       setRepos([...repos, repositories])
       setName('')
       setLoading(false)
@@ -32,9 +40,15 @@ export default function Main() {
 
 
     } catch {
+      setError(true)
       setLoading(false)
     }
 
+  }
+
+  const handleChange = (e) => {
+    setName(e)
+    setError(false)
   }
 
   useEffect(() => {
@@ -55,7 +69,7 @@ export default function Main() {
       <input type='text'
       placeholder='Adicionar repositório'
       value={name}
-      onChange={(e) => setName(e.target.value)}
+      onChange={(e) => handleChange(e.target.value)}
       />
 
       <SubmitButton disable={loading}>
@@ -66,6 +80,7 @@ export default function Main() {
       </SubmitButton>
 
     </Form>
+    {error ? <Errors>Repositório duplicado ou inválido</Errors> : null}
 
     <List>
     {repos.map(repository =>

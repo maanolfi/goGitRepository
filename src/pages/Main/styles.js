@@ -5,6 +5,7 @@ export const Form = styled.form`
   margin-top: 30px;
   display: flex;
   flex-direction: row;
+  margin-bottom: 10px;
 
   input {
     flex: 1;
@@ -70,4 +71,12 @@ export const List = styled.ul`
       text-decoration: none;
     }
   }
+`
+
+export const Errors = styled.span`
+  margin-left: 5px;
+  border-radius: 3px;
+  padding: 5px;
+  border: 1px solid red;
+
 `

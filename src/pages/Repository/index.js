@@ -5,11 +5,13 @@ import PropTypes from 'prop-types'
 import api from '../../services/api'
 
 import Container from '../../components/Container'
-import { Loading, Owner, IssueList } from './styles';
+import { Loading, Owner, IssueList, BtnFilter } from './styles';
 
 const Repository = ({ match }) => {
   const [repo, setRepo] = useState([])
   const [issue, setIssue] = useState([])
+  const [pages, setPages] = useState(1)
+  const [stateissues, setStateissues] = useState('open')
 
 
   useEffect(() => {
@@ -23,11 +25,35 @@ const Repository = ({ match }) => {
     const [repository, issues] = await Promise.all([
       api.get(`/repos/${repoName}`),
       api.get(`/repos/${repoName}/issues`, {
-        params: { state: 'open', per_page: 5 }
+        params: { state: stateissues, page: pages, per_page: 5 }
       })
     ])
     setRepo(repository.data)
     setIssue(issues.data)
+
+
+
+  }
+
+  const handleState = async (text) => {
+    const repoName = decodeURIComponent(match.params.repository)
+    const { data } = await api.get(`/repos/${repoName}/issues`, {
+      params: { state: text, page: pages, per_page: 5 }
+    })
+    setIssue(data)
+    setStateissues(text)
+
+
+  }
+
+  const handlePages = async ( page ) => {
+    const repoName = decodeURIComponent(match.params.repository)
+
+    const { data } = await api.get(`/repos/${repoName}/issues`, {
+      params: { state: stateissues, page: pages + page, per_page: 5 }
+    })
+    setIssue(data)
+    setPages(pages + page)
 
   }
 
@@ -40,6 +66,13 @@ const Repository = ({ match }) => {
         <h1>{repo.name}</h1>
         <p>{repo.description}</p>
       </Owner>
+
+      <BtnFilter>
+        <label>Issues: </label>
+        <button onClick={() => handleState('all')}>all</button>
+        <button onClick={() => handleState('open')}>open</button>
+        <button onClick={() => handleState('closed')}>closed</button>
+      </BtnFilter>
 
       <IssueList>
         {
@@ -59,8 +92,12 @@ const Repository = ({ match }) => {
           ))
         }
       </IssueList>
-
-
+      <BtnFilter>
+      {pages > 1 ?
+        <button onClick={() => handlePages(pages !== 0 ? -1 : null)}>Voltar</button>
+        : null}
+        <button onClick={() => handlePages(+1)}>Proxima</button>
+      </BtnFilter>
       </Container>
 
 
